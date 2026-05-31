@@ -1,0 +1,17 @@
+.DS_Store
+.idea
+.venv/
+__pycache__/
+*.pyc
+
+# Training artifacts and large datasets
+outputs/
+data/h5/
+data/h5_paper/
+data/train_images/
+data/eval_images/
+*.pth
+*.h5
+
+# Optional packaged archives
+*.zip
