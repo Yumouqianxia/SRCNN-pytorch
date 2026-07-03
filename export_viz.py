@@ -35,6 +35,7 @@ def load_model(weights_file, config, device):
         num_channels=int(config.get('num_channels', 1)),
         attention_type=config.get('attention_type', 'none'),
         attention_position=config.get('attention_position', 'after_conv2'),
+        kernel_sizes=tuple(config.get('kernel_sizes', [9, 5, 5])),
     ).to(device)
 
     state_dict = model.state_dict()

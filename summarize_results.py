@@ -41,6 +41,7 @@ def main():
                 'attention_type': config.get('attention_type'),
                 'loss_type': config.get('loss_type'),
                 'num_channels': config.get('num_channels'),
+                'kernel_sizes': '-'.join(str(size) for size in config.get('kernel_sizes', [9, 5, 5])),
                 'parameter_count': config.get('parameter_count'),
                 'last_epoch': last_row['epoch'],
                 'eval_psnr': last_row['eval_psnr'],

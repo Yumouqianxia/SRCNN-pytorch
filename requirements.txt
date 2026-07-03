@@ -3,3 +3,7 @@ Pillow
 h5py
 tqdm
 scikit-image
+pypdf
+opencv-python
+requests
+timm

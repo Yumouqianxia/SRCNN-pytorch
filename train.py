@@ -25,6 +25,7 @@ def get_args():
     parser.add_argument('--experiment-name', type=str, default='baseline')
     parser.add_argument('--scale', type=int, default=3)
     parser.add_argument('--model-name', type=str, default='srcnn_baseline', choices=['srcnn_baseline', 'srcnn_attention'])
+    parser.add_argument('--kernel-sizes', type=int, nargs=3, default=[9, 5, 5], metavar=('K1', 'K2', 'K3'))
     parser.add_argument('--attention-type', type=str, default='none', choices=['none', 'se', 'cbam'])
     parser.add_argument('--attention-position', type=str, default='after_conv2', choices=['after_conv1', 'after_conv2'])
     parser.add_argument('--num-channels', type=int, default=1, choices=[1, 3])
@@ -104,9 +105,10 @@ def run_eval(model, dataloader, device, calc_ssim_flag=True):
 
 def main():
     args = get_args()
+    kernel_tag = 'k' + '-'.join(str(size) for size in args.kernel_sizes)
     run_name = (
         f'{args.experiment_name}_x{args.scale}_{args.model_name}_{args.attention_type}_'
-        f'{args.loss_type}_c{args.num_channels}'
+        f'{args.loss_type}_c{args.num_channels}_{kernel_tag}'
     )
     args.outputs_dir = os.path.join(args.outputs_dir, run_name)
     os.makedirs(args.outputs_dir, exist_ok=True)
@@ -124,6 +126,7 @@ def main():
         num_channels=args.num_channels,
         attention_type=args.attention_type,
         attention_position=args.attention_position,
+        kernel_sizes=tuple(args.kernel_sizes),
     ).to(device)
     criterion = CombinedLoss(
         loss_type=args.loss_type,

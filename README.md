@@ -1,178 +1,274 @@
-# SRCNN Reproduction + Extension Toolkit
+# SRCNN Reproduction and Modern SR Comparison
 
-This repo now supports a full project workflow for:
+This repository contains a course final project for Digital Image and Signal Processing.
+The project started as a reproduction of SRCNN and was extended with:
 
-1. Baseline SRCNN reproduction (`x2/x3/x4`, Y channel, MSE)
-2. Structural extension (attention modules: `SE` or `CBAM`)
-3. Objective extension (perceptual loss on top of MSE)
-4. Joint experiment template (`Attention + Perceptual`)
+- paper-faithful SRCNN `9-1-5` reproduction,
+- comparison with the initial `9-5-5` SRCNN variant,
+- attention and perceptual-loss ablations,
+- pretrained SwinIR comparison,
+- qualitative practical tests on real low-resolution images.
 
-## 1) Environment Setup
+The current repository keeps source code, lightweight scripts, summary CSV files, and selected report figures.
+Large generated artifacts such as H5 datasets, trained `.pth` checkpoints, full `outputs/`, and SwinIR pretrained weights are intentionally not tracked.
 
-```bash
+## Repository Structure
+
+```text
+.
+├── datasets.py
+├── eval_h5.py
+├── export_viz.py
+├── losses.py
+├── models.py
+├── prepare.py
+├── run_experiments.py
+├── summarize_results.py
+├── test.py
+├── train.py
+├── utils.py
+├── scripts/
+│   ├── prepare_swinir_testsets.py
+│   ├── eval_swinir_outputs.py
+│   ├── run_practical_srcnn.py
+│   ├── run_practical_swinir.py
+│   └── make_practical_comparison_grid.py
+└── report_assets/
+    ├── data/
+    └── images/
+```
+
+## Environment
+
+```powershell
 python -m venv .venv
-# Windows PowerShell
 .venv\Scripts\Activate.ps1
-pip install -U pip
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
-pip install -r requirements.txt
+python -m pip install -U pip
+python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+python -m pip install -r requirements.txt
 ```
 
-## 2) Dataset Preparation
+`requirements.txt` includes the extra dependencies needed for SwinIR inference and report scripts:
+`opencv-python`, `timm`, `requests`, and `pypdf`.
 
-You can use official H5 files or generate your own.
+## Data Preparation
 
-### Generate training H5
+The SRCNN pipeline uses HR images to synthesize LR/HR pairs through bicubic downsampling and bicubic upsampling.
 
-```bash
-python prepare.py --images-dir "<train_images_dir>" --output-path "<train_x3_y.h5>" --scale 3 --patch-size 33 --stride 14 --color-space y
+Training H5:
+
+```powershell
+python prepare.py `
+  --images-dir "<train_images_dir>" `
+  --output-path "data/h5_paper/91-image_x3.h5" `
+  --scale 3 `
+  --patch-size 33 `
+  --stride 14 `
+  --color-space y
 ```
 
-### Generate eval H5
+Evaluation H5:
 
-```bash
-python prepare.py --images-dir "<eval_images_dir>" --output-path "<eval_x3_y.h5>" --scale 3 --color-space y --eval
+```powershell
+python prepare.py `
+  --images-dir "<eval_images_dir>" `
+  --output-path "data/h5_paper/Set5_x3.h5" `
+  --scale 3 `
+  --color-space y `
+  --eval
 ```
 
-For RGB experiments, set `--color-space rgb`.
+## SRCNN Reproduction
 
-## 3) Baseline Reproduction
+### 9-5-5 Variant
 
-```bash
-python train.py \
-  --train-file "<train_x3_y.h5>" \
-  --eval-file "<eval_x3_y.h5>" \
-  --outputs-dir "outputs" \
-  --experiment-name "baseline_repro" \
-  --scale 3 \
-  --model-name srcnn_baseline \
-  --attention-type none \
-  --loss-type mse \
-  --num-channels 1 \
+The initial implementation uses `9-5-5` kernels:
+
+```powershell
+python train.py `
+  --train-file "data/h5_paper/91-image_x3.h5" `
+  --eval-file "data/h5_paper/Set5_x3.h5" `
+  --outputs-dir "outputs" `
+  --experiment-name "repro_paper_full" `
+  --scale 3 `
+  --model-name srcnn_baseline `
+  --attention-type none `
+  --loss-type mse `
+  --num-channels 1 `
+  --kernel-sizes 9 5 5 `
   --num-epochs 400
 ```
 
-Run similarly for `--scale 2` and `--scale 4`.
+### Paper-Faithful 9-1-5
 
-## 4) Attention Extension
+The original ECCV 2014 SRCNN architecture uses `9-1-5` kernels.
+This project adds direct support for arbitrary kernel sizes:
 
-### SE attention
-
-```bash
-python train.py \
-  --train-file "<train_x3_y.h5>" \
-  --eval-file "<eval_x3_y.h5>" \
-  --outputs-dir "outputs" \
-  --experiment-name "attention_se" \
-  --scale 3 \
-  --model-name srcnn_attention \
-  --attention-type se \
-  --attention-position after_conv2 \
-  --loss-type mse \
-  --num-channels 1
+```powershell
+python train.py `
+  --train-file "data/h5_paper/91-image_x3.h5" `
+  --eval-file "data/h5_paper/Set5_x3.h5" `
+  --outputs-dir "outputs" `
+  --experiment-name "paper_915_fast" `
+  --scale 3 `
+  --model-name srcnn_baseline `
+  --attention-type none `
+  --loss-type mse `
+  --num-channels 1 `
+  --kernel-sizes 9 1 5 `
+  --num-epochs 400
 ```
 
-### CBAM attention
+The same command pattern was used for scales `x2`, `x3`, and `x4`.
 
-Replace `--attention-type se` with `--attention-type cbam`.
+## Set14 Evaluation
 
-## 5) Perceptual Loss Extension
+Evaluate a trained checkpoint on another H5 file:
 
-### Y-channel compatibility test
-
-```bash
-python train.py \
-  --train-file "<train_x3_y.h5>" \
-  --eval-file "<eval_x3_y.h5>" \
-  --outputs-dir "outputs" \
-  --experiment-name "perceptual_y_compat" \
-  --scale 3 \
-  --model-name srcnn_baseline \
-  --loss-type mse+perceptual \
-  --num-channels 1 \
-  --perceptual-weight 0.01 \
-  --perceptual-layer relu3_3
+```powershell
+python eval_h5.py `
+  --eval-file "data/h5_paper/Set14_x3_eval.h5" `
+  --weights-file "outputs/repro_paper_full_x3_srcnn_baseline_none_mse_c1/best.pth" `
+  --config-file "outputs/repro_paper_full_x3_srcnn_baseline_none_mse_c1/config.json" `
+  --output-path "outputs/repro_paper_full_set14_x3_eval_fullimage.csv"
 ```
 
-### RGB mainline (recommended)
+## SwinIR Modern Comparison
 
-```bash
-python train.py \
-  --train-file "<train_x3_rgb.h5>" \
-  --eval-file "<eval_x3_rgb.h5>" \
-  --outputs-dir "outputs" \
-  --experiment-name "perceptual_rgb" \
-  --scale 3 \
-  --model-name srcnn_baseline \
-  --loss-type mse+perceptual \
-  --num-channels 3 \
-  --perceptual-weight 0.01 \
-  --perceptual-layer relu3_3
+SwinIR is used as a modern transformer-based comparison method from the course-provided super-resolution paper list.
+It is **not trained from scratch** in this project. We use official pretrained SwinIR weights for inference.
+
+Clone SwinIR separately:
+
+```powershell
+mkdir external
+git clone https://github.com/JingyunLiang/SwinIR.git external/SwinIR
 ```
 
-## 6) Joint Model (Attention + Perceptual)
+Download or auto-download official classical SR weights:
 
-```bash
-python train.py \
-  --train-file "<train_x3_rgb.h5>" \
-  --eval-file "<eval_x3_rgb.h5>" \
-  --outputs-dir "outputs" \
-  --experiment-name "joint_rgb" \
-  --scale 3 \
-  --model-name srcnn_attention \
-  --attention-type se \
-  --loss-type mse+perceptual \
-  --num-channels 3 \
-  --perceptual-weight 0.01
+```text
+external/SwinIR/model_zoo/swinir/
+├── 001_classicalSR_DIV2K_s48w8_SwinIR-M_x2.pth
+├── 001_classicalSR_DIV2K_s48w8_SwinIR-M_x3.pth
+└── 001_classicalSR_DIV2K_s48w8_SwinIR-M_x4.pth
 ```
 
-## 7) Batch Experiment Launcher
+Prepare image-folder testsets for SwinIR:
 
-`run_experiments.py` can launch baseline + attention + perceptual(Y compatibility) jobs:
-
-```bash
-python run_experiments.py \
-  --outputs-dir outputs \
-  --train-files 2=<train_x2_y.h5> 3=<train_x3_y.h5> 4=<train_x4_y.h5> \
-  --eval-files 2=<eval_x2_y.h5> 3=<eval_x3_y.h5> 4=<eval_x4_y.h5> \
-  --num-epochs 200
+```powershell
+python scripts/prepare_swinir_testsets.py `
+  --set5-dir "data/benchmark_raw/set14_srcnn_repo/Set5" `
+  --set14-dir "data/benchmark_raw/Set14" `
+  --output-root "data/swinir_testsets" `
+  --scales 2 3 4
 ```
 
-## 8) Inference
+Run official SwinIR inference, for example Set5 x3:
 
-```bash
-python test.py \
-  --weights-file "<outputs/.../best.pth>" \
-  --image-file "<test_image_path>" \
-  --scale 3 \
-  --model-name srcnn_attention \
-  --attention-type se \
-  --num-channels 1
+```powershell
+cd external/SwinIR
+..\..\.venv\Scripts\python.exe main_test_swinir.py `
+  --task classical_sr `
+  --scale 3 `
+  --training_patch_size 48 `
+  --model_path "model_zoo/swinir/001_classicalSR_DIV2K_s48w8_SwinIR-M_x3.pth" `
+  --folder_lq "../../data/swinir_testsets/Set5/LR_bicubic/X3" `
+  --folder_gt "../../data/swinir_testsets/Set5/HR/X3"
+cd ../..
 ```
 
-The script saves bicubic and SR outputs next to the input image.
+Recompute SwinIR outputs with the same Y-channel/no-crop convention used for the SRCNN table:
 
-## 8.1) Export Visual Comparison After Training
-
-Use `export_viz.py` to export images into a run-specific visualization folder:
-
-```bash
-python export_viz.py \
-  --run-dir "outputs/baseline_repro_x3_srcnn_baseline_none_mse_c1" \
-  --images "data/butterfly_GT.bmp" "data/zebra.bmp" "data/ppt3.bmp"
+```powershell
+python scripts/eval_swinir_outputs.py `
+  --dataset Set5 `
+  --scale 3 `
+  --sr-dir "outputs/swinir/set5_x3_outputs" `
+  --gt-dir "data/swinir_testsets/Set5/HR/X3" `
+  --output-csv "outputs/swinir/set5_x3_y_nocrop.csv"
 ```
 
-It will create `<run-dir>/viz/` containing:
+## Practical Low-Resolution Images
 
-- `*_bicubic_x<scale>.*`
-- `*_sr_x<scale>.*`
-- `*_triplet_x<scale>.png` (original / bicubic / SR side by side)
+Real low-resolution images do not have ground-truth HR references, so PSNR/SSIM is not meaningful.
+They are used only for qualitative comparison.
 
-## 9) Logged Artifacts
+Run SRCNN on practical images:
 
-Each experiment directory contains:
+```powershell
+python scripts/run_practical_srcnn.py `
+  --input-dir "data/practical_images_x4" `
+  --output-dir "outputs/practical_sr_x4_all" `
+  --scale 4 `
+  --weights-955 "outputs/repro_paper_full_x4_srcnn_baseline_none_mse_c1/best.pth" `
+  --config-955 "outputs/repro_paper_full_x4_srcnn_baseline_none_mse_c1/config.json" `
+  --weights-915 "outputs/paper_915_fast_x4_srcnn_baseline_none_mse_c1_k9-1-5/best.pth" `
+  --config-915 "outputs/paper_915_fast_x4_srcnn_baseline_none_mse_c1_k9-1-5/config.json"
+```
 
-- `config.json`: full configuration and parameter count
-- `metrics.csv`: per-epoch train/eval metrics (loss, PSNR, SSIM)
-- `best.pth`: best checkpoint by PSNR
-- optional `epoch_*.pth`: intermediate checkpoints
+Run SwinIR on the same practical images:
+
+```powershell
+python scripts/run_practical_swinir.py `
+  --input-dir "data/practical_images_x4" `
+  --output-dir "outputs/practical_sr_x4_all/swinir_x4" `
+  --swinir-dir "external/SwinIR" `
+  --model-path "external/SwinIR/model_zoo/swinir/001_classicalSR_DIV2K_s48w8_SwinIR-M_x4.pth" `
+  --scale 4 `
+  --training-patch-size 48
+```
+
+Create comparison grids:
+
+```powershell
+python scripts/make_practical_comparison_grid.py `
+  --input-dir "data/practical_images_x4" `
+  --output-root "outputs/practical_sr_x4_all" `
+  --scale 4
+```
+
+## Final Summary Results
+
+Selected final report assets are tracked under `report_assets/`.
+
+### SRCNN and SwinIR Quantitative Comparison
+
+File: `report_assets/data/summary_swinir_vs_srcnn_y_nocrop.csv`
+
+| Dataset | Scale | SRCNN 9-5-5 | SRCNN 9-1-5 | SwinIR pretrained |
+|---|---:|---:|---:|---:|
+| Set5 | x2 | 36.5129 / 0.9588 | 36.0641 / 0.9560 | 38.3341 / 0.9666 |
+| Set5 | x3 | 33.1732 / 0.9303 | 32.7022 / 0.9226 | 35.4955 / 0.9508 |
+| Set5 | x4 | 30.1749 / 0.8680 | 29.9150 / 0.8595 | 32.6230 / 0.9111 |
+| Set14 | x3 | 29.5050 / 0.8522 | 29.2290 / 0.8457 | 31.0948 / 0.8797 |
+
+### Practical Qualitative Comparison
+
+The x4 practical comparison figure is available at:
+
+```text
+report_assets/images/all_practical_comparisons_x4.png
+```
+
+These examples compare:
+
+```text
+LR input → Bicubic → SRCNN 9-5-5 → SRCNN 9-1-5 → SwinIR
+```
+
+No PSNR/SSIM is reported for these real low-resolution examples because ground-truth HR images are unavailable.
+
+## What Is Not Tracked
+
+The following files are intentionally excluded from git:
+
+- `.venv/`
+- `external/SwinIR/`
+- official SwinIR `.pth` weights,
+- generated H5 datasets,
+- full training outputs and logs,
+- full PowerPoint/PDF drafts,
+- full practical image output folders.
+
+This keeps the GitHub repository small while preserving the code and final report evidence needed to reproduce the process.

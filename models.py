@@ -81,11 +81,21 @@ def _build_attention(name, channels, reduction=16):
 
 
 class SRCNN(nn.Module):
-    def __init__(self, num_channels=1, attention_type="none", attention_position="after_conv2", reduction=16):
+    def __init__(
+        self,
+        num_channels=1,
+        attention_type="none",
+        attention_position="after_conv2",
+        reduction=16,
+        kernel_sizes=(9, 5, 5),
+    ):
         super().__init__()
-        self.conv1 = nn.Conv2d(num_channels, 64, kernel_size=9, padding=9 // 2)
-        self.conv2 = nn.Conv2d(64, 32, kernel_size=5, padding=5 // 2)
-        self.conv3 = nn.Conv2d(32, num_channels, kernel_size=5, padding=5 // 2)
+        if len(kernel_sizes) != 3:
+            raise ValueError(f"Expected three kernel sizes, got: {kernel_sizes}")
+        k1, k2, k3 = kernel_sizes
+        self.conv1 = nn.Conv2d(num_channels, 64, kernel_size=k1, padding=k1 // 2)
+        self.conv2 = nn.Conv2d(64, 32, kernel_size=k2, padding=k2 // 2)
+        self.conv3 = nn.Conv2d(32, num_channels, kernel_size=k3, padding=k3 // 2)
         self.relu = nn.ReLU(inplace=True)
         self.attention_position = attention_position
         self.attn1 = _build_attention(attention_type, 64, reduction=reduction)
@@ -104,14 +114,26 @@ class SRCNN(nn.Module):
         return x
 
 
-def create_model(model_name="srcnn_baseline", num_channels=1, attention_type="none", attention_position="after_conv2"):
+def create_model(
+    model_name="srcnn_baseline",
+    num_channels=1,
+    attention_type="none",
+    attention_position="after_conv2",
+    kernel_sizes=(9, 5, 5),
+):
     model_name = model_name.lower()
     if model_name == "srcnn_baseline":
-        return SRCNN(num_channels=num_channels, attention_type="none", attention_position=attention_position)
+        return SRCNN(
+            num_channels=num_channels,
+            attention_type="none",
+            attention_position=attention_position,
+            kernel_sizes=kernel_sizes,
+        )
     if model_name == "srcnn_attention":
         return SRCNN(
             num_channels=num_channels,
             attention_type=attention_type,
             attention_position=attention_position,
+            kernel_sizes=kernel_sizes,
         )
     raise ValueError(f"Unknown model name: {model_name}")

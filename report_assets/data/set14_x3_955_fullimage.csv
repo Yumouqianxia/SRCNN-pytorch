@@ -1,0 +1,2 @@
+eval_file,weights_file,scale,kernel_sizes,parameter_count,eval_psnr,eval_ssim
+data/h5_paper/Set14_x3_eval.h5,outputs/repro_paper_full_x3_srcnn_baseline_none_mse_c1/best.pth,3,9-5-5,57281,29.505047253199987,0.8522292712601036

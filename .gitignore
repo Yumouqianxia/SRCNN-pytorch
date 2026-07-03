@@ -3,6 +3,7 @@
 .venv/
 __pycache__/
 *.pyc
+external/
 
 # Training artifacts and large datasets
 outputs/
@@ -10,8 +11,20 @@ data/h5/
 data/h5_paper/
 data/train_images/
 data/eval_images/
+data/benchmark_raw/
+data/everyday_images/
+data/practical_images/
+data/practical_images_updated/
+data/practical_images_x4/
+data/swinir_testsets/
 *.pth
 *.h5
 
 # Optional packaged archives
 *.zip
+
+# Local presentation/report drafts and source papers
+*.pptx
+*.pdf
+report/
+final_project_guidelines.pdf
