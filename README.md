@@ -11,31 +11,32 @@ The project started as a reproduction of SRCNN and was extended with:
 
 The current repository keeps source code, lightweight scripts, summary CSV files, and selected report figures.
 Large generated artifacts such as H5 datasets, trained `.pth` checkpoints, full `outputs/`, and SwinIR pretrained weights are intentionally not tracked.
+All paths below are relative to the repository root after cloning.
 
 ## Repository Structure
 
 ```text
 .
-├── datasets.py
-├── eval_h5.py
-├── export_viz.py
-├── losses.py
-├── models.py
-├── prepare.py
-├── run_experiments.py
-├── summarize_results.py
-├── test.py
-├── train.py
-├── utils.py
-├── scripts/
-│   ├── prepare_swinir_testsets.py
-│   ├── eval_swinir_outputs.py
-│   ├── run_practical_srcnn.py
-│   ├── run_practical_swinir.py
-│   └── make_practical_comparison_grid.py
-└── report_assets/
-    ├── data/
-    └── images/
+|-- datasets.py
+|-- eval_h5.py
+|-- export_viz.py
+|-- losses.py
+|-- models.py
+|-- prepare.py
+|-- run_experiments.py
+|-- summarize_results.py
+|-- test.py
+|-- train.py
+|-- utils.py
+|-- scripts/
+|   |-- prepare_swinir_testsets.py
+|   |-- eval_swinir_outputs.py
+|   |-- run_practical_srcnn.py
+|   |-- run_practical_swinir.py
+|   `-- make_practical_comparison_grid.py
+`-- report_assets/
+    |-- data/
+    `-- images/
 ```
 
 ## Environment
@@ -149,9 +150,9 @@ Download or auto-download official classical SR weights:
 
 ```text
 external/SwinIR/model_zoo/swinir/
-├── 001_classicalSR_DIV2K_s48w8_SwinIR-M_x2.pth
-├── 001_classicalSR_DIV2K_s48w8_SwinIR-M_x3.pth
-└── 001_classicalSR_DIV2K_s48w8_SwinIR-M_x4.pth
+|-- 001_classicalSR_DIV2K_s48w8_SwinIR-M_x2.pth
+|-- 001_classicalSR_DIV2K_s48w8_SwinIR-M_x3.pth
+`-- 001_classicalSR_DIV2K_s48w8_SwinIR-M_x4.pth
 ```
 
 Prepare image-folder testsets for SwinIR:
@@ -254,7 +255,7 @@ report_assets/images/all_practical_comparisons_x4.png
 These examples compare:
 
 ```text
-LR input → Bicubic → SRCNN 9-5-5 → SRCNN 9-1-5 → SwinIR
+LR input -> Bicubic -> SRCNN 9-5-5 -> SRCNN 9-1-5 -> SwinIR
 ```
 
 No PSNR/SSIM is reported for these real low-resolution examples because ground-truth HR images are unavailable.
