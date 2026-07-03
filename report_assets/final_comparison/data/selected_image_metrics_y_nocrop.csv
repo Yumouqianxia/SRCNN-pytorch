@@ -1,0 +1,17 @@
+dataset,scale,image,method,psnr_y_nocrop,ssim_y_nocrop
+Set5,x2,butterfly,Bicubic,27.5009,0.9187
+Set5,x2,butterfly,SRCNN 9-5-5,32.2904,0.9649
+Set5,x2,butterfly,SRCNN 9-1-5,31.4884,0.9589
+Set5,x2,butterfly,SwinIR,36.1888,0.9821
+Set5,x3,butterfly,Bicubic,24.5157,0.8445
+Set5,x3,butterfly,SRCNN 9-5-5,28.3610,0.9241
+Set5,x3,butterfly,SRCNN 9-1-5,27.5465,0.9074
+Set5,x3,butterfly,SwinIR,32.7089,0.9666
+Set5,x4,butterfly,Bicubic,22.1813,0.7508
+Set5,x4,butterfly,SRCNN 9-5-5,24.9175,0.8463
+Set5,x4,butterfly,SRCNN 9-1-5,24.5650,0.8274
+Set5,x4,butterfly,SwinIR,29.4073,0.9364
+Set14,x3,zebra,Bicubic,27.2565,0.8297
+Set14,x3,zebra,SRCNN 9-5-5,29.6703,0.8788
+Set14,x3,zebra,SRCNN 9-1-5,29.4577,0.8741
+Set14,x3,zebra,SwinIR,31.5050,0.8980

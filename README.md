@@ -233,6 +233,14 @@ python scripts/make_practical_comparison_grid.py `
 
 Selected final report assets are tracked under `report_assets/`.
 
+For report writing, the most complete packaged version is:
+
+```text
+report_assets/final_comparison/
+```
+
+It contains the final CSV tables, training-set sample images, benchmark visual comparisons with ground truth, and practical no-ground-truth examples.
+
 ### SRCNN and SwinIR Quantitative Comparison
 
 File: `report_assets/data/summary_swinir_vs_srcnn_y_nocrop.csv`
