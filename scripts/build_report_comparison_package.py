@@ -163,6 +163,51 @@ def make_training_grid() -> None:
     canvas.save(out_path)
 
 
+def make_training_degradation_examples(scale: int = 3) -> None:
+    train_dir = ROOT / "data" / "benchmark_raw" / "set14_srcnn_repo" / "Train"
+    paths = sorted(train_dir.glob("*.bmp"))[:6]
+    if not paths:
+        return
+
+    out_dir = OUT / "images" / "training_degradation_examples"
+    panel_dir = out_dir / "panels"
+    panel_dir.mkdir(parents=True, exist_ok=True)
+
+    grids = []
+    for path in paths:
+        hr = Image.open(path).convert("RGB")
+        width = (hr.width // scale) * scale
+        height = (hr.height // scale) * scale
+        hr = hr.resize((width, height), Image.Resampling.BICUBIC)
+        lr = hr.resize((width // scale, height // scale), Image.Resampling.BICUBIC)
+        bicubic_input = lr.resize((width, height), Image.Resampling.BICUBIC)
+
+        sample_dir = panel_dir / path.stem
+        sample_dir.mkdir(parents=True, exist_ok=True)
+        hr.save(sample_dir / "hr_ground_truth.png")
+        lr.save(sample_dir / f"synthetic_lr_x{scale}.png")
+        bicubic_input.save(sample_dir / f"bicubic_input_x{scale}.png")
+
+        panels = [
+            ("HR ground truth", hr, ""),
+            (f"Synthetic LR x{scale}", lr.resize((width, height), Image.Resampling.NEAREST), "displayed with nearest zoom"),
+            (f"Bicubic input x{scale}", bicubic_input, "SRCNN model input"),
+        ]
+        grid_path = out_dir / f"{path.stem}_degradation_x{scale}.png"
+        make_benchmark_grid(f"Training degradation example: {path.name}", panels, grid_path)
+        grids.append(Image.open(grid_path).convert("RGB"))
+
+    if grids:
+        width = max(grid.width for grid in grids)
+        height = sum(grid.height for grid in grids) + 18 * (len(grids) - 1)
+        sheet = Image.new("RGB", (width, height), "#e9eef1")
+        y = 0
+        for grid in grids:
+            sheet.paste(grid, ((width - grid.width) // 2, y))
+            y += grid.height + 18
+        sheet.save(out_dir / f"all_training_degradation_examples_x{scale}.png")
+
+
 def copy_tables() -> None:
     table_dir = OUT / "data"
     table_dir.mkdir(parents=True, exist_ok=True)
@@ -277,6 +322,7 @@ All paths are relative to the repository root.
 ## Images
 
 - `images/training_samples/training_hr_samples_grid.png`: HR source samples from the 91-image training set.
+- `images/training_degradation_examples/`: examples showing HR ground truth, synthetic LR, and bicubic-upsampled SRCNN input.
 - `images/benchmark_gt_comparisons/`: benchmark examples with ground truth, bicubic, SRCNN `9-5-5`, SRCNN `9-1-5`, and SwinIR.
 - `images/benchmark_gt_comparisons/panels/`: individual panels for each benchmark example.
 - `images/practical_no_gt_comparisons/`: real low-resolution examples. These do not have ground truth, so PSNR/SSIM should not be reported for them.
@@ -291,6 +337,7 @@ def main() -> None:
 
     copy_tables()
     make_training_grid()
+    make_training_degradation_examples(scale=3)
     build_benchmark_comparisons()
     copy_practical_grids()
     write_readme()
