@@ -165,7 +165,7 @@ def make_training_grid() -> None:
 
 def make_training_degradation_examples(scale: int = 3) -> None:
     train_dir = ROOT / "data" / "benchmark_raw" / "set14_srcnn_repo" / "Train"
-    paths = sorted(train_dir.glob("*.bmp"))[:6]
+    paths = sorted(train_dir.glob("*.bmp"))
     if not paths:
         return
 
@@ -195,7 +195,8 @@ def make_training_degradation_examples(scale: int = 3) -> None:
         ]
         grid_path = out_dir / f"{path.stem}_degradation_x{scale}.png"
         make_benchmark_grid(f"Training degradation example: {path.name}", panels, grid_path)
-        grids.append(Image.open(grid_path).convert("RGB"))
+        if len(grids) < 12:
+            grids.append(Image.open(grid_path).convert("RGB"))
 
     if grids:
         width = max(grid.width for grid in grids)
@@ -205,7 +206,7 @@ def make_training_degradation_examples(scale: int = 3) -> None:
         for grid in grids:
             sheet.paste(grid, ((width - grid.width) // 2, y))
             y += grid.height + 18
-        sheet.save(out_dir / f"all_training_degradation_examples_x{scale}.png")
+        sheet.save(out_dir / f"training_degradation_examples_preview_x{scale}.png")
 
 
 def copy_tables() -> None:

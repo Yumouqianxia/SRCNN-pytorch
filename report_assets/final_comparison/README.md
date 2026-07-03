@@ -12,7 +12,7 @@ All paths are relative to the repository root.
 ## Images
 
 - `images/training_samples/training_hr_samples_grid.png`: HR source samples from the 91-image training set.
-- `images/training_degradation_examples/`: examples showing HR ground truth, synthetic LR, and bicubic-upsampled SRCNN input.
+- `images/training_degradation_examples/`: all 91 training examples showing HR ground truth, synthetic LR, and bicubic-upsampled SRCNN input.
 - `images/benchmark_gt_comparisons/`: benchmark examples with ground truth, bicubic, SRCNN `9-5-5`, SRCNN `9-1-5`, and SwinIR.
 - `images/benchmark_gt_comparisons/panels/`: individual panels for each benchmark example.
 - `images/practical_no_gt_comparisons/`: real low-resolution examples. These do not have ground truth, so PSNR/SSIM should not be reported for them.
