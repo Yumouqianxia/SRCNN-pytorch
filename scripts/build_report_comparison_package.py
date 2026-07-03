@@ -273,7 +273,9 @@ def build_benchmark_comparisons() -> None:
 
         sample_panel_dir = panel_root / sample_tag
         sample_panel_dir.mkdir(parents=True, exist_ok=True)
+        synthetic_lr = gt.resize((gt.width // scale, gt.height // scale), Image.Resampling.BICUBIC)
         gt.save(sample_panel_dir / "ground_truth.png")
+        synthetic_lr.save(sample_panel_dir / f"synthetic_lr_x{scale}.png")
         bicubic.save(sample_panel_dir / "bicubic.png")
         model_outputs["9-5-5"].save(sample_panel_dir / "srcnn_9-5-5.png")
         model_outputs["9-1-5"].save(sample_panel_dir / "srcnn_9-1-5.png")
